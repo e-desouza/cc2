@@ -1,0 +1,26 @@
+{{define "header"}}
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tiny Test Server</title>
+</head>
+<body >
+
+<a href="/"><h3 style="color: black">Confidential Calculator</h3></a>
+<h4>Decrypts and processes encrypted inputs</h4>
+{{ if .InTEE}}{{else}}<small>(probably not runing inside TEE...)</small><br/>{{end}}
+{{ with .User}}You are logged in as "{{.}}" <br/>{{end}}
+<hr/>
+{{end}}
+
+{{define "footer"}}
+<hr/>
+Santander Blockchain Center of Excellence
+
+</body>
+</html>
+        {{end}}
+
+
+

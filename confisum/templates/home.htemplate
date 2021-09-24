@@ -1,0 +1,32 @@
+{{define "home"}}
+{{template "header" .HeaderData}}
+        {{with .Error}}Error: {{.}}{{end}}
+
+
+
+<form action="/chamber?playerno={{.BodyData.Start}}&playercount={{.BodyData.Count}}" method="post"> 
+<table  width=800px>
+<tr>
+<td width=150px valign="top">Session Public Key:</td><td >
+
+<textarea style="border: none; width: 100%; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;" name="serverpubkey">{{.BodyData.Chamber.ServerPubKey}}</textarea></td>
+</tr>
+<tr><td colspan=2><hr/></td></tr>
+               {{template "inputguts" (slice .BodyData.Chamber.Inputs .BodyData.Start .BodyData.Stop)}}
+
+<tr>
+<td valign="top">Output:</td><td>
+{{.BodyData.Chamber.Output}}</td>
+</tr>
+<tr>
+<td valign="top">Private Output A:</td><td>
+{{(index .BodyData.Chamber.PrivateOutputs 0)}}</td>
+</tr>
+<tr>
+<td><input type="Submit" value="Submit" /></td><td>{{with .BodyData.Chamber.Error}} {{.}}{{end}}</td>
+</tr>
+
+</table>
+</form>
+{{template "footer" .FooterData}}
+{{end}}
