@@ -8,3 +8,6 @@ Second set of examples to test confidential computing options
 4) ...
 
 You can filter the confisum gui by passing playerno=0|1|2 parameter in the url
+
+An exaple private key (any hex-encoded 32-byte string will do):
+c70426899a815facf48177fe6405c64c013d9e94a08678fb844c85df69d57f4c
