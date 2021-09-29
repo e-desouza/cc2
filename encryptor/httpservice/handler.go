@@ -81,7 +81,7 @@ func (ch *chamber) ChamberPub() string {
 
 func (ch *chamber) PlayerPub() string {
 	if ch.playerPrivkey == nil {
-		return "Not set"
+		return "-- Set the Private Key. The Public Key will be calculated automatically ---"
 	} else {
 		return hex.EncodeToString(ch.playerPrivkey.PubKey().SerializeUncompressed())
 	}
@@ -104,6 +104,8 @@ func (ch *chamber) handleChamber(r *http.Request, data *templates.RenderData) {
 	plaintext := r.FormValue("message")
 	chpubtxt := r.FormValue("chamberpubkey")
 	sendprivtxt := r.FormValue("senderprivkey")
+	//Pad with zeros, if necessary
+	sendprivtxt = fmt.Sprintf("%064s", sendprivtxt)
 	ch.Error = nil
 	ch.Ciphertext = ""
 	ch.Signature = ""
