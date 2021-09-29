@@ -54,13 +54,14 @@ func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "chamber":
 		mh.chamber.process(r, data)
 	case "newsession":
-		var count int
 		countpar := r.FormValue("count")
-		count, err := strconv.Atoi(countpar)
+		playercount, err := strconv.Atoi(countpar)
 		if err != nil {
-			count = 3
+			playercount = 3
 		}
-		mh.chamber = NewChamber(count)
+		mh.chamber = NewChamber(playercount)
+		data.TemplateName = "home"
+		data.BodyData = t1{mh.chamber, 0, playercount, playercount}
 	default:
 		data.TemplateName = "home"
 		data.BodyData = t1{mh.chamber, 0, playercount, playercount}
