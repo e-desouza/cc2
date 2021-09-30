@@ -55,7 +55,8 @@ func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		mh.chamber.process(r, data)
 	case "newsession":
 		countpar := r.FormValue("count")
-		playercount, err := strconv.Atoi(countpar)
+		var err error
+		playercount, err = strconv.Atoi(countpar)
 		if err != nil {
 			playercount = 3
 		}
