@@ -1,7 +1,7 @@
 package main
 
 import (
-	httpservice "github.com/san-lab/cc2/encryptor/httpservice"
+	"github.com/san-lab/cc2/encryptor/httpservice"
 
 	"github.com/san-lab/commongo/gohttpservice"
 )

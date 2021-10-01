@@ -1,4 +1,4 @@
-package handler
+package httpservice
 
 import (
 	"encoding/hex"
