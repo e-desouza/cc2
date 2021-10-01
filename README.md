@@ -12,28 +12,6 @@ You can filter the confisum gui by passing playerno=0|1|2 parameter in the url
 An exaple private key (any hex-encoded 32-byte string will do):
 c70426899a815facf48177fe6405c64c013d9e94a08678fb844c85df69d57f4c
 
-## Dockerized Confisum (pre-compiled version - 0.11)
-
-There's also a dockerized version here:
-
-https://hub.docker.com/r/juanfer/confisum
-
-To use it just run:
-
-```
-docker run -p 8080:8080 juanfer/confisum:0.11 &
-```
-
-This starts the service mapping port 8080 of the host to port 8080 of the container. If needed a different host port, just change mapping.
-
-
-## Dockerized Confisum (to-compile version - 0.12)
-
-This version also uses a dynamic port definition, so it must be run with `--expose` flag, and with env variable `httpPort` (defaults to 8080).
-
-So, to use it run:
-
-```
-docker run --expose 8080 -p 8080:8080 juanfer/confisum:0.12 &
-```
-
+Inside the folders *confisum | encryptor* you will find a docker build files to create docker images.
+OR
+Issuing ```> go build``` within these folders will create standalone apps. 
