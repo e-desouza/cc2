@@ -55,7 +55,7 @@ func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		hash := sha256.Sum256([]byte("dupa"))
 		rep, err := enclave.GetRemoteReport(hash[:])
 		fmt.Fprintln(w, err)
-		fmt.Fprintln("----------------------------")
+		fmt.Fprintln(w, "----------------------------")
 		fmt.Fprintln(w, string(rep))
 		return
 	case "loadtemplates":
