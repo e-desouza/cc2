@@ -5,6 +5,6 @@
  "heapSize": 512,
  "productID": 1,
  "securityVersion": 1,
- "mounts": null,
+ "mounts": [],
  "env": null
 }

@@ -1,6 +1,7 @@
 package httpservice
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -9,7 +10,8 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/san-lab/commongo/gohttpservice/templates"
+	"github.com/edgelesssys/ego/enclave"
+	"github.com/san-lab/cc2/confisum/templates"
 	"github.com/san-lab/commongo/jafgoecies/ecies"
 )
 
@@ -49,6 +51,12 @@ func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	switch path {
+	case "attest":
+		hash := sha256.Sum256([]byte("dupa"))
+		rep, err := enclave.GetRemoteReport(hash[:])
+		fmt.Fprintln(w, err)
+		fmt.Fprintln(w, string(rep))
+		return
 	case "loadtemplates":
 		mh.Renderer.LoadTemplates()
 	case "chamber":
@@ -68,7 +76,7 @@ func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		data.BodyData = t1{mh.chamber, 0, playercount, playercount}
 	}
 
-	mh.Renderer.RenderResponse(w, *data)
+	templates.RenderResponse(w, *data)
 	if r.URL.Path[1:] == "EXIT" {
 		os.Exit(0)
 	}
