@@ -52,7 +52,7 @@ func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch path {
 	case "attest":
-		hash := sha256.Sum256([]byte("dupa"))
+		hash := sha256.Sum256([]byte{})
 		rep, err := enclave.GetRemoteReport(hash[:])
 		w.Header().Add("Content-type", "plain/text")
 		fmt.Fprintln(w, err)
@@ -248,7 +248,12 @@ func (ch *chamber) Output() string {
 	if len(parsingError) > len(parsingError0) {
 		return parsingError
 	}
-	out1, err := ecies.ECEncryptPub(ch.Inputs[0].PublicKey, []byte("You are the gratest!"), false)
+	grt := "greater"
+	if ch.Inputs[0].decodedInput < ch.Inputs[1].decodedInput {
+		grt = "smaller"
+	}
+	privOutputA := fmt.Sprintf("Yuor input was %s than B's...", grt)
+	out1, err := ecies.ECEncryptPub(ch.Inputs[0].PublicKey, []byte(privOutputA), false)
 	if err != nil {
 		ch.PrivateOutputs[0] = fmt.Sprint(err)
 	} else {
