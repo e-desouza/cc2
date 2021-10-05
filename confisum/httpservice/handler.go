@@ -54,6 +54,7 @@ func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "attest":
 		hash := sha256.Sum256([]byte("dupa"))
 		rep, err := enclave.GetRemoteReport(hash[:])
+		w.Header().Add("Content-type", "plain/text")
 		fmt.Fprintln(w, err)
 		fmt.Fprintln(w, "----------------------------")
 		fmt.Fprintln(w, string(rep))
