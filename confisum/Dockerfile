@@ -1,10 +1,8 @@
-#FROM alpine:3.13
-FROM redhat/ubi8-micro:latest
-RUN mkdir /app
-RUN mkdir /app/templates
-WORKDIR /app/
-COPY confisum .
-COPY templates ./templates/
-RUN chmod +x confisum
-EXPOSE 8080
-ENTRYPOINT ["./confisum"]
+FROM golang
+
+WORKDIR /go/src/github.com/san-lab
+RUN git clone https://github.com/san-lab/cc2 && git clone https://github.com/san-lab/commongo
+RUN cd /go/src/github.com/san-lab/cc2/confisum && rm confisum && go build
+ENV httpPort "8080"
+WORKDIR /go/src/github.com/san-lab/cc2/confisum
+CMD ./confisum -httpPort=$httpPort

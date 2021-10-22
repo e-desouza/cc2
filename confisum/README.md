@@ -6,6 +6,6 @@ The keys are hex-encoded BTCEC (bitcoin/Koblitz) keys for now
 The "confisum" app starts an http server on port 8080 by defaut.
 The Dockerfile continues with this default, so the way to use docker is:
 ```
-docker build -t %imageName% . -f Dockerfile-to-compile
+docker build -t %imageName% .
 docker run -p %yourFavPort%:8080 %imageName%
 ```
