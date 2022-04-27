@@ -45,7 +45,7 @@ function myFunction(id) {
   //alert("Copied the text: " + copyText.value);
 }
 </script>
-<form action="/chamber" method="post"> 
+<form action="./chamber" method="post"> 
 <table  width=1200px>
 <tr>
 <td width=150px valign="top">Plaintext Message:</td><td >
