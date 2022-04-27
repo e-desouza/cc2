@@ -7,7 +7,7 @@
 </head>
 <body >
 
-<a href="/"><h3 style="color: black">Encryptor</h3></a>
+<a href="."><h3 style="color: black">Encryptor</h3></a>
 <h4>Encrypts a message using Confisum Public Key (ECIES), signs with Sender's private key </h4>
 
 {{ with .User}}You are logged in as "{{.}}" <br/>{{end}}

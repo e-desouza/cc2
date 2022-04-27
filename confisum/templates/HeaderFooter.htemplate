@@ -7,7 +7,7 @@
 </head>
 <body >
 
-<a href="/"><h3 style="color: black">Confidential Calculator</h3></a>
+<a href="."><h3 style="color: black">Confidential Calculator</h3></a>
 <h4>Decrypts and processes encrypted inputs</h4>
 
 {{ with .User}}You are logged in as "{{.}}" <br/>{{end}}
