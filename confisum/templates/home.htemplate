@@ -20,7 +20,7 @@ function copyKey() {
 
 </script>
 
-<form action="./chamber?playerno={{.BodyData.Start}}&playercount={{.BodyData.Count}}" method="post"> 
+<form action="confisum/chamber?playerno={{.BodyData.Start}}&playercount={{.BodyData.Count}}" method="post"> 
 <table  width=1000px>
 <tr>
 <td width=150px valign="top">Session Public Key:</td><td >
