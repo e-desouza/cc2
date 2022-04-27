@@ -8,5 +8,6 @@ import (
 
 func main() {
 	h := httpservice.NewHandler()
+	gohttpservice.DefPort = "8180"
 	gohttpservice.Startserver(h)
 }

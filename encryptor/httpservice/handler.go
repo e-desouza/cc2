@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/san-lab/commongo/gohttpservice/templates"
@@ -16,13 +17,11 @@ var InTEE bool
 
 type myHandler struct {
 	Renderer *templates.Renderer
-	chamber  *chamber
 }
 
 func NewHandler() *myHandler {
 	mh := new(myHandler)
 	mh.Renderer = templates.NewRenderer()
-	mh.chamber = new(chamber)
 	//mh.chamber.playerPrivkey, _ = btcec.NewPrivateKey(btcec.S256())
 	return mh
 }
@@ -30,7 +29,7 @@ func NewHandler() *myHandler {
 func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	data := new(templates.RenderData)
-	path := r.URL.Path[1:]
+	path := lastWord.FindString(r.URL.Path)
 	data.User, _, _ = r.BasicAuth()
 	data.HeaderData = struct {
 		User  string
@@ -38,20 +37,20 @@ func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}{data.User, InTEE}
 
 	r.ParseForm()
-
+	fmt.Println(path)
 	switch path {
-	case "chamber":
-		mh.chamber.handleChamber(r, data)
-	case "serverpublic":
-		fmt.Fprintf(w, "Server Public Key:\n%s\n", mh.chamber.ChamberPub())
-		return
-	case "loadtemplates":
+	case "/chamber":
+		mh.handleChamber(r, data)
+	//case "/serverpublic":
+	//	fmt.Fprintf(w, "Server Public Key:\n%s\n", mh.chamber.ChamberPub())
+	//	return
+	case "/loadtemplates":
 		mh.Renderer.LoadTemplates()
 		fmt.Fprintln(w, "Templates have been reloaded")
 		return
 	default:
 		data.TemplateName = "home"
-		data.BodyData = mh.chamber
+		data.BodyData = new(chamber)
 	}
 	//TODO change method args to reference
 	mh.Renderer.RenderResponse(w, *data)
@@ -95,24 +94,18 @@ func (ch *chamber) PlayerPriv() string {
 	}
 }
 
-func (ch *chamber) state() string {
-	return ""
-}
-
-func (ch *chamber) handleChamber(r *http.Request, data *templates.RenderData) {
+func (mh *myHandler) handleChamber(r *http.Request, data *templates.RenderData) {
 	//Get submitted values
 	plaintext := r.FormValue("message")
 	chpubtxt := r.FormValue("chamberpubkey")
 	sendprivtxt := r.FormValue("senderprivkey")
 	//Pad with zeros, if necessary
 	sendprivtxt = fmt.Sprintf("%064s", sendprivtxt)
-	ch.Error = nil
-	ch.Ciphertext = ""
-	ch.Signature = ""
+	ch := new(chamber)
 	var err error
 	//Process
 	if chpubtxt != "" { //try to parse as public key
-		chpubbytes, err := hex.DecodeString(chpubtxt)
+		chpubbytes, err := hex.DecodeString(trimit.FindString(chpubtxt))
 		if err != nil {
 			ch.Error = fmt.Errorf("Error parsing pubkey: %s", err)
 		} else {
@@ -157,7 +150,7 @@ func (ch *chamber) handleChamber(r *http.Request, data *templates.RenderData) {
 	}
 
 	//Decrypt return message if any and if the key is set
-	ch.ReturnMessage = r.FormValue("retmessage")
+	ch.ReturnMessage = trimit.FindString(r.FormValue("retmessage"))
 	if ch.playerPrivkey != nil {
 
 		if ch.ReturnMessage != "" {
@@ -177,4 +170,12 @@ func (ch *chamber) handleChamber(r *http.Request, data *templates.RenderData) {
 	//Set htmlForm fields
 	ch.PlainMessage = plaintext
 	data.BodyData = ch
+}
+
+var lastWord *regexp.Regexp
+var trimit *regexp.Regexp
+
+func init() {
+	lastWord = regexp.MustCompile(`/[\w]*$`)
+	trimit = regexp.MustCompile(`[\S]+`)
 }

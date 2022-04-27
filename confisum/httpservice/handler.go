@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -39,7 +40,7 @@ type t1 struct {
 func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	data := new(templates.RenderData)
-	path := r.URL.Path[1:]
+	path := lastWord.FindString(r.URL.Path)
 	data.User, _, _ = r.BasicAuth()
 	data.HeaderData = struct {
 		User  string
@@ -49,11 +50,11 @@ func (mh *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	switch path {
-	case "loadtemplates":
+	case "/loadtemplates":
 		mh.Renderer.LoadTemplates()
-	case "chamber":
+	case "/chamber":
 		mh.chamber.process(r, data)
-	case "newsession":
+	case "/newsession":
 		countpar := r.FormValue("count")
 		var err error
 		playercount, err = strconv.Atoi(countpar)
@@ -100,13 +101,13 @@ type SafeInput struct {
 	PublicKey    *btcec.PublicKey
 	Signature    *btcec.Signature
 	decodedInput string
-	Error        error
+	Error        string
 	Timestamp    time.Time
 }
 
 func (ch *chamber) ServerPubKey() string {
 	if ch.servkey == nil {
-		return "Not set"
+		return "Not_set"
 	} else {
 		return hex.EncodeToString(ch.servkey.PubKey().SerializeUncompressed())
 	}
@@ -114,7 +115,7 @@ func (ch *chamber) ServerPubKey() string {
 
 func (sfi *SafeInput) PlayerPubKey() string {
 	if sfi.PublicKey == nil {
-		return "Not set"
+		return "Not_set"
 	} else {
 		return hex.EncodeToString(sfi.PublicKey.SerializeUncompressed())
 	}
@@ -122,7 +123,7 @@ func (sfi *SafeInput) PlayerPubKey() string {
 }
 
 func (sfi *SafeInput) SignatureTxt() string {
-	if sfi.Error != nil {
+	if sfi.Error != "" {
 		return fmt.Sprint(sfi.Error)
 	}
 	if sfi.Signature == nil {
@@ -155,7 +156,30 @@ func (ch *chamber) process(r *http.Request, data *templates.RenderData) {
 		if ch.Inputs[idx].Signature != nil { //Do not touch already submitted, properly sgned inputs
 			continue
 		}
-		ch.Inputs[idx].Error = nil
+		ch.Inputs[idx].Error = ""
+
+		//Parse public key
+		keypkey := "playerpub" + ch.Inputs[idx].PlayerName
+		pubstr := trimit.FindString(r.FormValue(keypkey))
+		var pubk *btcec.PublicKey
+		if pubstr == "Not_set" || pubstr == "" {
+			continue
+		}
+		bts, err := hex.DecodeString(pubstr)
+		if err == nil {
+
+			pubk, err = btcec.ParsePubKey(bts, btcec.S256())
+
+		}
+		if err != nil {
+			ch.Inputs[idx].Error = fmt.Sprintf("A small problem decoding PubKey %s: %s", ch.Inputs[idx].PlayerName, err)
+		} else {
+			ch.Inputs[idx].PublicKey = pubk
+		}
+		if err != nil {
+			continue
+		}
+
 		key := "input" + ch.Inputs[idx].PlayerName
 		encmessage := r.FormValue(key)
 		//fmt.Println(key, encmessage)
@@ -163,45 +187,31 @@ func (ch *chamber) process(r *http.Request, data *templates.RenderData) {
 			continue
 		}
 		ch.Inputs[idx].Input = encmessage
-		var bts, pbts []byte
-		bts, err := hex.DecodeString(encmessage)
+		var pbts []byte
+		bts, err = hex.DecodeString(trimit.FindString(encmessage))
 		if err == nil {
 			pbts, err = ecies.ECDecryptPriv(ch.servkey, bts, false)
 		}
 		if err != nil {
-			ch.Inputs[idx].Error = fmt.Errorf("A small Error decoding Intput%v %s", idx, err)
+			ch.Inputs[idx].Error = fmt.Sprintf("A small Error decoding Intput: %s", err)
 		} else {
 			ch.Inputs[idx].decodedInput = string(pbts)
 		}
 		if err != nil {
 			continue
 		}
-		//Parse public key
-		keypkey := "playerpub" + ch.Inputs[idx].PlayerName
-		pubstr := r.FormValue(keypkey)
-		var pubk *btcec.PublicKey
-		if len(pubstr) == 2*65 {
 
-			bts, err = hex.DecodeString(pubstr)
-			pubk, err = btcec.ParsePubKey(bts, btcec.S256())
-		} else {
-			err = fmt.Errorf("Invalid Public Key length")
-		}
-		if err != nil {
-			ch.Inputs[idx].Error = fmt.Errorf("A small problem decoding PubKey %s %s", ch.Inputs[idx].PlayerName, err)
-		} else {
-			ch.Inputs[idx].PublicKey = pubk
-		}
-		if err != nil {
-			continue
-		}
 		//Parse signature
 		var sig *btcec.Signature
-		sigstr := r.FormValue("signature" + ch.Inputs[idx].PlayerName)
+		sigstr := trimit.FindString(r.FormValue("signature" + ch.Inputs[idx].PlayerName))
 		bts, err = hex.DecodeString(sigstr)
-		sig, err = btcec.ParseSignature(bts, btcec.S256())
+		fmt.Println(sigstr, len(sigstr), err)
+		if err == nil {
+			sig, err = btcec.ParseSignature(bts, btcec.S256())
+		}
+
 		if err != nil {
-			ch.Inputs[idx].Error = fmt.Errorf("A small Eproblem decoding Signature %s %s", ch.Inputs[idx].PlayerName, err)
+			ch.Inputs[idx].Error = fmt.Sprintf("A small problem decoding Signature %s %s", ch.Inputs[idx].PlayerName, err)
 		} else {
 			ch.Inputs[idx].Signature = sig
 			ch.Inputs[idx].Timestamp = time.Now()
@@ -238,11 +248,23 @@ func (ch *chamber) Output() string {
 	if len(parsingError) > len(parsingError0) {
 		return parsingError
 	}
-	out1, err := ecies.ECEncryptPub(ch.Inputs[0].PublicKey, []byte("You are the gratest!"), false)
-	if err != nil {
-		ch.PrivateOutputs[0] = fmt.Sprint(err)
-	} else {
-		ch.PrivateOutputs[0] = hex.EncodeToString(out1)
+	for i := range ch.Inputs {
+		message := []byte("You are the gratest!")
+		out1, err := ecies.ECEncryptPub(ch.Inputs[0].PublicKey, message, false)
+		if err != nil {
+			ch.PrivateOutputs[i] = fmt.Sprint(err)
+		} else {
+			ch.PrivateOutputs[i] = hex.EncodeToString(out1)
+		}
 	}
+
 	return strconv.Itoa(ss)
+}
+
+var lastWord *regexp.Regexp
+var trimit *regexp.Regexp
+
+func init() {
+	lastWord = regexp.MustCompile(`/[\w]*$`)
+	trimit = regexp.MustCompile(`[\S]+`)
 }
