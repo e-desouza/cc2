@@ -250,7 +250,7 @@ func (ch *chamber) Output() string {
 	}
 	for i := range ch.Inputs {
 		message := []byte("You are the gratest!")
-		out1, err := ecies.ECEncryptPub(ch.Inputs[0].PublicKey, message, false)
+		out1, err := ecies.ECEncryptPub(ch.Inputs[i].PublicKey, message, false)
 		if err != nil {
 			ch.PrivateOutputs[i] = fmt.Sprint(err)
 		} else {
